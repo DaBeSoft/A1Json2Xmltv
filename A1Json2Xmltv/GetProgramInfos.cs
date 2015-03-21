@@ -60,6 +60,12 @@ namespace A1Json2Xmltv
 
                 var pos = Interlocked.Increment(ref current);
                 Console.WriteLine("\t({4}/{5}){0}: Loading Details for {1} {2}/{3}", td.Name, programInfo[3].Value<string>(), pos, all, _currentSender, Senders.Count);
+
+
+                var moreData = GetDescription(programInfo[0].Value<int>());
+
+
+
                 var pi = new ProgramInfo
                 {
                     EventId = programInfo[0].Value<int>(),
@@ -69,7 +75,8 @@ namespace A1Json2Xmltv
                     ShortInfo = programInfo[4].Value<string>(),
                     LustigerBuchstabe = programInfo[6].Value<string>(),
                     Year = -1,
-                    Description = GetDescription(programInfo[0].Value<int>())
+                    Description = moreData != null ? moreData.Description : "",
+                    Category = moreData != null ? moreData.Genre : ""
                 };
 
                 int.TryParse(programInfo[7].Value<string>(), out pi.Year);
@@ -97,9 +104,9 @@ namespace A1Json2Xmltv
             Console.WriteLine("-> Done");
         }
 
-        private static string GetDescription(int id)
+        private static Event GetDescription(int id)
         {
-            var desc = "";
+            //var desc = "";
 
             try
             {
@@ -108,14 +115,15 @@ namespace A1Json2Xmltv
 
                 var data = JsonConvert.DeserializeObject<Rootobject<ProgramDetail>>(json);
 
-                desc = data.data[0].Event.Description;
+                //desc = data.data[0].Event.Description;
+                return data.data[0].Event;
             }
             catch (Exception)
             {
                 Console.WriteLine("COULDNT LOAD INFORMATION FOR " + id);
             }
 
-            return desc;
+            return null;
         }
 
 

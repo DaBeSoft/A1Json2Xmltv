@@ -52,16 +52,24 @@ namespace A1Json2Xmltv
                     _resultBuilder.AppendLine(string.Format("<sub-title lang='de'>{0}</sub-title>", prog.ShortInfo));
 
                 if (!string.IsNullOrWhiteSpace(prog.Description))
-                    _resultBuilder.AppendLine(string.Format("<desc lang='de'>{0}</desc>", prog.Description));
+                    _resultBuilder.AppendLine(string.Format("<desc lang='de'>{0}</desc>", getUtf8String(prog.Description)));
 
                 if (prog.Year != -1)
                     _resultBuilder.AppendLine(string.Format("<date>{0}</date>", prog.Year));
-                if (prog.Genres.Count > 0)
-                    _resultBuilder.AppendLine(string.Format("<category lang='de'>{0}</category>", prog.Genres[0]));
+                if (!string.IsNullOrEmpty(prog.Category))
+                    _resultBuilder.AppendLine(string.Format("<category lang='de'>{0}</category>", prog.Category));
 
 
                 _resultBuilder.AppendLine("</programme>");
             }
+        }
+
+
+        private string getUtf8String(string s)
+        {
+            var bytes = Encoding.Default.GetBytes(s);
+            s = Encoding.UTF8.GetString(bytes);
+            return s;
         }
 
         private static string DateFormatter(string date)
