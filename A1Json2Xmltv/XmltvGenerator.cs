@@ -52,12 +52,12 @@ namespace A1Json2Xmltv
                     _resultBuilder.AppendLine(string.Format("<sub-title lang='de'>{0}</sub-title>", prog.ShortInfo));
 
                 if (!string.IsNullOrWhiteSpace(prog.Description))
-                    _resultBuilder.AppendLine(string.Format("<desc lang='de'>{0}</desc>", getUtf8String(prog.Description)));
+                    _resultBuilder.AppendLine(string.Format("<desc lang='de'>{0}</desc>", GetUtf8String(prog.Description)));
 
                 if (prog.Year != -1)
                     _resultBuilder.AppendLine(string.Format("<date>{0}</date>", prog.Year));
                 if (!string.IsNullOrEmpty(prog.Category))
-                    _resultBuilder.AppendLine(string.Format("<category lang='de'>{0}</category>", prog.Category));
+                    _resultBuilder.AppendLine(string.Format("<category lang='de'>{0}</category>", FixGenreForTvHeadEnd(prog.Category)));
 
 
                 _resultBuilder.AppendLine("</programme>");
@@ -65,7 +65,75 @@ namespace A1Json2Xmltv
         }
 
 
-        private string getUtf8String(string s)
+        private string FixGenreForTvHeadEnd(string s)
+        {
+            switch (s)
+            {
+                case "Kinder":
+                    s = "Children's / Youth";
+                    break;
+                case "Info":
+                    s = "News / Current affairs";
+                    break;
+                case "Serie":
+                    s = "Show / Games";
+                    break;
+                case "Comedy":
+                    s = "Children's / Youth";
+                    break;
+                case "Lifestyle":
+                    s = "Special characteristics";
+                    break;
+                case "Sport":
+                    s = "Sports";
+                    break;
+                case "News":
+                    s = "News / Current affairs";
+                    break;
+                case "Spielfilm":
+                    s = "Movie / Drama";
+                    break;
+                case "Show":
+                    s = "Show / Games";
+                    break;
+                case "Musik":
+                    s = "Music";
+                    break;
+                case "Reality":
+                    s = "Special characteristics";
+                    break;
+
+                case "Magazin   ":
+                    s = "Special characteristics";
+                    break;
+                //case "Reality":
+                //    s = "Special characteristics";
+                //    break;
+                //case "Reality":
+                //    s = "Special characteristics";
+                //    break;
+
+                default:
+                    s = "";
+                    break;
+            }
+
+  //          "" 
+  //"" 
+  //"" 
+  //"" 
+  //"Music" 
+  //"Art / Culture" 
+  //"Social / Political issues / Economics" 
+  //"Education / Science / Factual topics" 
+  //"Leisure hobbies" 
+  //"Special characteristics"
+
+            return s;
+        }
+
+
+        private static string GetUtf8String(string s)
         {
             var bytes = Encoding.Default.GetBytes(s);
             s = Encoding.UTF8.GetString(bytes);
