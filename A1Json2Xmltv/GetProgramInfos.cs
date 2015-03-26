@@ -43,9 +43,7 @@ namespace A1Json2Xmltv
                     "http://epggw.a1.net/a/api.mobile.event.hour?type=JSON.1&stationuid={0}&period={1}T0000/{2}",
                     id, dateString, Settings.HoursToLoad + "H");
 
-            var uri = new Uri(query);
-
-            var json = new WebClient().DownloadString(uri);
+            var json = new WebClient().DownloadString(new Uri(query));
 
             var result = (JArray)JsonConvert.DeserializeObject(json);
             result = result[1].Value<JArray>();
@@ -57,14 +55,11 @@ namespace A1Json2Xmltv
 
             var feResult = Parallel.ForEach(result[2], programInfo =>
             {
-
                 var pos = Interlocked.Increment(ref current);
                 Console.WriteLine("\t({4}/{5}){0}: Loading Details for {1} {2}/{3}", td.Name, programInfo[3].Value<string>(), pos, all, _currentSender, Senders.Count);
 
 
                 var moreData = GetDescription(programInfo[0].Value<int>());
-
-
 
                 var pi = new ProgramInfo
                 {
@@ -87,10 +82,17 @@ namespace A1Json2Xmltv
                 td.Programs.Add(pi);
             });
 
+            
+
             while (!feResult.IsCompleted)
                 Thread.Sleep(1);
             Datas.Add(td);
         }
+
+
+
+
+
 
         public void GetChannelData()
         {
@@ -106,8 +108,6 @@ namespace A1Json2Xmltv
 
         private static Event GetDescription(int id)
         {
-            //var desc = "";
-
             try
             {
                 var query = string.Format("http://epggw.a1.net/a/api.mobile.event.get?type=JSON.1&evid={0}", id);
@@ -115,12 +115,11 @@ namespace A1Json2Xmltv
 
                 var data = JsonConvert.DeserializeObject<Rootobject<ProgramDetail>>(json);
 
-                //desc = data.data[0].Event.Description;
                 return data.data[0].Event;
             }
             catch (Exception)
             {
-                Console.WriteLine("COULDNT LOAD INFORMATION FOR " + id);
+                Console.WriteLine("COULDN'T LOAD INFORMATION FOR " + id);
             }
 
             return null;

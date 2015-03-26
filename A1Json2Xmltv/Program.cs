@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using A1Dal;
 using Dabesoft.Xmltv;
 using Dabesoft.Xmltv.Models;
@@ -27,20 +28,24 @@ namespace A1Json2Xmltv
 
             Console.WriteLine("Starting");
 
-            var b = new GetProgramInfos();
-            b.GetChannelData();
-
-            //todo trigger for get only from db or get from internet
             var d = new Dal();
-            foreach (var data in b.Datas)
+
+            if (args.Contains("/I"))
             {
-                var st = d.AddStation(data.Id, data.Name, "");
-                foreach (var s in data.Programs)
+                Console.WriteLine("Getting ProgramData from A1...");
+                var b = new GetProgramInfos();
+                b.GetChannelData();
+
+                foreach (var data in b.Datas)
                 {
-                    d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
+                    var st = d.AddStation(data.Id, data.Name, "");
+                    foreach (var s in data.Programs)
+                    {
+                        d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
+                        d.SaveShows();
+                    }
                 }
             }
-
 
 
 
@@ -71,9 +76,10 @@ namespace A1Json2Xmltv
         private static void PrintHelp()
         {
             Console.WriteLine("Kommandos:\r\n" +
+                "/I	lädt alle ausgewählten Sender aus dem Internet herunter" +
                 "/A	lädt alle verfügbaren Sender in die Datei \\A1Json2Xmltv\\Sender.txt\r\n" +
                 "/?	Gibt diese Hilfeseite aus\r\n" +
-                "Ohne Argument -> führt das Programm aus, bzw. zeigt diese Seite an, falls keine LoadInfo.txt existiert.\r\n\r\n" +
+                "Ohne Argument -> lädt alle ausgewählten Sender aus der Datenbank in das XMLTV File, bzw. zeigt diese Seite an, falls keine LoadInfo.txt existiert.\r\n\r\n" +
                 "Funktionsweise:\r\n" +
                 "Alle Sender in der Datei \\A1Json2Xmltv\\LoadInfo.txt werden geladen. Um diese Datei zu erstellen, führen Sie dieses Programm mit dem Argument /A aus.\r\n" +
                 "Löschen Sie nun alle Sender aus der \\A1Json2Xmltv\\Sender.txt die Sie nicht benötigen und benennen Sie die Datei in LoadInfo.txt um.\r\n" +
