@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using A1Dal.Models;
+using System.Data.Entity;
 
 namespace A1Dal
 {
@@ -76,7 +77,7 @@ namespace A1Dal
 
         public List<Station> GetStations()
         {
-            return _context.Stations.ToList();
+            return _context.Stations.Include(i => i.Shows.Select(t => t.Genre)).ToList();
         }
 
 

@@ -55,6 +55,10 @@ namespace A1Json2Xmltv
                 c.AddChannel(station.Name);
                 foreach (var show in station.Shows)
                 {
+                    try
+                    {
+
+                    
                     c.AddProgramInfos(new ShowInfo
                     {
                         Category = show.Genre.DvbName,
@@ -65,6 +69,13 @@ namespace A1Json2Xmltv
                         End = show.End,
                         Start = show.Start
                     });
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
+                        
+                    }
                 }
             }
 
