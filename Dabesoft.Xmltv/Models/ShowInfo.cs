@@ -9,5 +9,6 @@
         public string Description { get; set; }
         public int Year { get; set; }
         public string Category { get; set; }
+        public string StationName { get; set; }
     }
 }

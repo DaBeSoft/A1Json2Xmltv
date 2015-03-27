@@ -47,34 +47,34 @@ namespace A1Json2Xmltv
                 }
             }
 
-
-
             var c = new XmltvGenerator();
+
+            c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
+
             foreach (var station in d.GetStations())
             {
-                c.AddChannel(station.Name);
+                //c.AddChannel(station.Name);
                 foreach (var show in station.Shows)
                 {
                     try
                     {
-
-                    
-                    c.AddProgramInfos(new ShowInfo
-                    {
-                        Category = show.Genre.DvbName,
-                        Year = show.Year,
-                        Name = show.Name,
-                        Description = show.Description,
-                        ShortInfo = show.SubName,
-                        End = show.End,
-                        Start = show.Start
-                    });
+                        c.AddProgramInfos(new ShowInfo
+                        {
+                            Category = show.Genre.DvbName,
+                            Year = show.Year,
+                            Name = show.Name,
+                            Description = show.Description,
+                            ShortInfo = show.SubName,
+                            End = show.End,
+                            Start = show.Start,
+                            StationName = station.Name
+                        });
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e.Message);
                         Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
-                        
+
                     }
                 }
             }

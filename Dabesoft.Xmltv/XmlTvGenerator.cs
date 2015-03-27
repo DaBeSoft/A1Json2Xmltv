@@ -43,7 +43,7 @@ namespace Dabesoft.Xmltv
                 si.ShortInfo = si.ShortInfo.Replace("&", "&amp;");
 
 
-            var channelName = si.Name.Replace(" ", "").Replace("/", "I").Replace("_", "");
+            var channelName = si.StationName.Replace(" ", "").Replace("/", "I").Replace("_", "");
             channelName += ".1";
 
             _resultBuilder.AppendLine(
