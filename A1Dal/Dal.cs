@@ -12,7 +12,9 @@ namespace A1Dal
         public Dal()
         {
             _context = new Context();
-            var g = new Genre { A1Name = "Test", DvbName = "Test" }; //Create all Tables and stuff, because EntityFramework crashes if DB doesnt exist....
+
+            //Create all Tables and stuff, because EntityFramework crashes if DB doesnt exist....
+            var g = new Genre { A1Name = "Test", DvbName = "Test" };
             _context.Genres.Add(g);
             _context.SaveChanges();
             _context.Genres.Remove(g);
@@ -21,24 +23,31 @@ namespace A1Dal
 
         private Genre AddGenre(string name)
         {
-            var g = _context.Genres.FirstOrDefault(ge => ge.A1Name == name);
+            var g = _context.Genres.Local.SingleOrDefault(ge => ge.A1Name == name);
+
+            if (g == null)
+                g = _context.Genres.SingleOrDefault(ge => ge.A1Name == name);
+
 
             if (g == null)
             {
                 g = new Genre { A1Name = name, DvbName = name };
-
                 _context.Genres.Add(g);
-                _context.SaveChanges();
             }
 
             return g;
         }
 
-        public void AddShow(Station s, int id, string start, string end, string name, string genre, int year, string imageUri, string copyright, string description, int stationId, string subName)
+        public Show AddShow(Station s, int id, string start, string end, string name, string genre, int year, string imageUri, string copyright, string description, int stationId, string subName)
         {
-            if (_context.Shows.SingleOrDefault(g => g.ShowId == id) == null)
+            var show = _context.Shows.Local.SingleOrDefault(g => g.ShowId == id);
+
+            if (show == null)
+                show = _context.Shows.SingleOrDefault(g => g.ShowId == id);
+
+            if (show == null)
             {
-                _context.Shows.Add(new Show
+                show = new Show
                 {
                     ShowId = id,
                     End = end,
@@ -51,13 +60,19 @@ namespace A1Dal
                     Station = s,
                     SubName = subName,
                     Year = year
-                });
+                };
+                _context.Shows.Add(show);
             }
+
+            return show;
         }
 
         public Station AddStation(int id, string name, string imageUri)
         {
-            var s = _context.Stations.SingleOrDefault(g => g.StationId == id);
+            var s = _context.Stations.Local.SingleOrDefault(g => g.StationId == id);
+
+            if (s == null)
+                s = _context.Stations.SingleOrDefault(g => g.StationId == id);
 
             if (s == null)
             {
@@ -68,7 +83,6 @@ namespace A1Dal
                     StationImageUri = imageUri
                 };
                 _context.Stations.Add(s);
-                _context.SaveChanges();
 
             }
 
@@ -81,7 +95,7 @@ namespace A1Dal
         }
 
 
-        public void SaveShows()
+        public void Save()
         {
             _context.SaveChanges();
         }

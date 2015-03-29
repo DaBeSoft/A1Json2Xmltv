@@ -42,9 +42,10 @@ namespace A1Json2Xmltv
                     foreach (var s in data.Programs)
                     {
                         d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
-                        d.SaveShows();
                     }
                 }
+
+                d.Save();
             }
 
             var c = new XmltvGenerator();
