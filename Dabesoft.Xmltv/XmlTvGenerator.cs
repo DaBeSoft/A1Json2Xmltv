@@ -81,7 +81,10 @@ namespace Dabesoft.Xmltv
             ret += date.Substring(0, date.IndexOf('T'));
             ret += date.Substring(date.IndexOf('T') + 1);
             ret += "00";
-            ret += " +0100";
+            ret += " +0200"; //TODO DAYLIGHT SAVINGSTIME
+
+            //TimeZoneInfo a = new TimeZoneInfo();
+
             return ret;
         }
 

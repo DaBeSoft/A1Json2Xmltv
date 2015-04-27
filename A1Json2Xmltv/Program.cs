@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using A1Dal;
 using Dabesoft.Xmltv;
 using Dabesoft.Xmltv.Models;
 
@@ -10,7 +9,9 @@ namespace A1Json2Xmltv
     {
         private static void Main(string[] args)
         {
+            Settings.CreateDefaultSettings();
             Console.WriteLine("DabeSoft's A1 TV Xmltv Creator");
+
 
 
             if ((args.Length == 0 && !Settings.SettingsExist) || (args.Length > 0 && args[0] == "/?"))
@@ -21,14 +22,15 @@ namespace A1Json2Xmltv
 
             if ((args.Length > 0 && args[0] == "/A"))
             {
-                Settings.CreateDefaultSettings();
-                GetTvPrograms.GetSender();
+                var i = GetTvPrograms.GetSender();
+                Console.WriteLine(i + " Sender gefunden");
                 return;
             }
 
             Console.WriteLine("Starting");
 
-            var d = new Dal();
+            //var d = new Dal();
+            var c = new XmltvGenerator();
 
             if (args.Contains("/I"))
             {
@@ -38,50 +40,60 @@ namespace A1Json2Xmltv
 
                 foreach (var data in b.Datas)
                 {
-                    var st = d.AddStation(data.Id, data.Name, "");
-                    foreach (var s in data.Programs)
-                    {
-                        d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
-                    }
-                }
-
-                d.Save();
-            }
-
-            var c = new XmltvGenerator();
-
-            c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
-
-            foreach (var station in d.GetStations())
-            {
-                //c.AddChannel(station.Name);
-                foreach (var show in station.Shows)
-                {
-                    try
+                    c.AddChannel(data.Name);
+                    //var st = d.AddStation(data.Id, data.Name, "");
+                    foreach (var show in data.Programs)
                     {
                         c.AddProgramInfos(new ShowInfo
                         {
-                            Category = show.Genre.DvbName,
+                            Category = show.Category,
                             Year = show.Year,
                             Name = show.Name,
                             Description = show.Description,
-                            ShortInfo = show.SubName,
+                            ShortInfo = show.ShortInfo,
                             End = show.End,
                             Start = show.Start,
-                            StationName = station.Name
+                            StationName = data.Name
                         });
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
-
+                        //d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
                     }
                 }
+                c.Write(Settings.GetInstance().OutputPath);
+                //d.Save();
             }
 
-            Console.WriteLine("Writing Data");
-            c.Write(Settings.GuidePath);
+
+            //c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
+
+            //foreach (var station in d.GetStations())
+            //{
+            //    //c.AddChannel(station.Name);
+            //    foreach (var show in station.Shows)
+            //    {
+            //        try
+            //        {
+            //            c.AddProgramInfos(new ShowInfo
+            //            {
+            //                Category = show.Genre.DvbName,
+            //                Year = show.Year,
+            //                Name = show.Name,
+            //                Description = show.Description,
+            //                ShortInfo = show.SubName,
+            //                End = show.End,
+            //                Start = show.Start,
+            //                StationName = station.Name
+            //            });
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            Console.WriteLine(e.Message);
+            //            Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
+            //        }
+            //    }
+            //}
+
+            //Console.WriteLine("Writing Data");
+            //c.Write(Settings.GetInstance().OutputPath);
         }
 
 
@@ -89,7 +101,7 @@ namespace A1Json2Xmltv
         {
             Console.WriteLine("Kommandos:\r\n" +
                 "/I	lädt alle ausgewählten Sender aus dem Internet herunter" +
-                "/A	lädt alle verfügbaren Sender in die Datei \\A1Json2Xmltv\\Sender.txt\r\n" +
+                "/A	lädt alle verfügbaren Sender in die Settings Datei\r\n" +
                 "/?	Gibt diese Hilfeseite aus\r\n" +
                 "Ohne Argument -> lädt alle ausgewählten Sender aus der Datenbank in das XMLTV File, bzw. zeigt diese Seite an, falls keine LoadInfo.txt existiert.\r\n\r\n" +
                 "Funktionsweise:\r\n" +

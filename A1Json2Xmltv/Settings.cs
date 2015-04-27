@@ -1,57 +1,94 @@
 ﻿using System;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace A1Json2Xmltv
 {
-    static class Settings
+    public class Settings
     {
+        private int _hoursToLoad = 480;
+        private string _outputPath = SettingsPath + "/tvguide.xml";
 
-        private static string Settingspath { get { return Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location); } }
-
-        public static bool SettingsExist
+        [JsonProperty(PropertyName = "hoursToLoad")]
+        public int HoursToLoad
         {
-            get { return File.Exists(Settingspath + "\\LoadInfo.txt"); }
+            get { return _hoursToLoad; }
+            set { _hoursToLoad = value; }
         }
+
+        [JsonProperty(PropertyName = "OutputPath")]
+        public string OutputPath
+        {
+            get { return _outputPath; }
+            set { _outputPath = value; }
+        }
+
+        [JsonProperty(PropertyName = "senderDefinitions")]
+        public SenderSetting[] SenderDefinitions { get; set; }
+
+        private static string SettingsPath { get { return Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location); } }
+        private static string SettingsFilePath { get { return SettingsPath + "/Settings.json"; } }
+
+        public static bool SettingsExist { get { return File.Exists(SettingsFilePath); } }
+
+        protected Settings()
+        {
+            
+        }
+        
+        private static Settings _settings;
+
+        public static Settings GetInstance()
+        {
+            if (_settings == null && SettingsExist)
+                _settings = LoadSettings();
+            if(_settings == null && !SettingsExist)
+                _settings = new Settings();
+            return _settings;
+        }
+
+        private static Settings LoadSettings()
+        {
+            using (var sr = new StreamReader(SettingsFilePath))
+            {
+                var json = sr.ReadToEnd();
+                return JsonConvert.DeserializeObject<Settings>(json);
+            }
+        }
+
+        public static void SaveSettings()
+        {
+            var set = GetInstance();
+            using (var sw = new StreamWriter(SettingsFilePath, false))
+            {
+                sw.Write(JsonConvert.SerializeObject(set, Formatting.Indented));
+            }
+        }
+
 
         public static void CreateDefaultSettings()
         {
-            if (!Directory.Exists(Settingspath))
-                Directory.CreateDirectory(Settingspath);
-
-        }
-
-        static public string GuidePath
-        {
-            get { return Settingspath + @"\tvguide.xml"; }
-        }
-
-        static public string LoadInfo
-        {
-            get { return Settingspath + @"\LoadInfo.txt"; }
-        }
-
-        static public string Sender
-        {
-            get { return Settingspath + @"\Sender.txt"; }
-        }
-
-        static public int HoursToLoad
-        {
-            get
+            if (!SettingsExist)
             {
-                if (!File.Exists(Settingspath + "\\HoursToLoad.txt"))
-                {
-                    using (var sw = new StreamWriter(Settingspath + "\\HoursToLoad.txt", false))
-                    {
-                        sw.WriteLine("480");
-                        sw.WriteLine("In der ersten Zeile darf nur eine Zahl stehen!");
-                        sw.WriteLine("Diese Zahl gibt an wie viele Stunden ab jetzt an Programminformationen geladen werden sollen");
-                    }
-                }
-                using (var sr = new StreamReader(Settingspath + "\\HoursToLoad.txt"))
-                    return Convert.ToInt32(sr.ReadLine());
+                SaveSettings();
+                Console.WriteLine("Default Settings created");
             }
         }
+    }
+
+    public class SenderSetting
+    {
+        public SenderSetting(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+
+        [JsonProperty(PropertyName = "id")]
+        public int Id { get; set; }
+
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
 
     }
 }

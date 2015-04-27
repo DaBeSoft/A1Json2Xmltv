@@ -23,10 +23,8 @@ namespace A1Dal
 
         private Genre AddGenre(string name)
         {
-            var g = _context.Genres.Local.SingleOrDefault(ge => ge.A1Name == name);
-
-            if (g == null)
-                g = _context.Genres.SingleOrDefault(ge => ge.A1Name == name);
+            var g = _context.Genres.Local.SingleOrDefault(ge => ge.A1Name == name) ??
+                    _context.Genres.SingleOrDefault(ge => ge.A1Name == name);
 
 
             if (g == null)
@@ -40,10 +38,8 @@ namespace A1Dal
 
         public Show AddShow(Station s, int id, string start, string end, string name, string genre, int year, string imageUri, string copyright, string description, int stationId, string subName)
         {
-            var show = _context.Shows.Local.SingleOrDefault(g => g.ShowId == id);
-
-            if (show == null)
-                show = _context.Shows.SingleOrDefault(g => g.ShowId == id);
+            var show = _context.Shows.Local.SingleOrDefault(g => g.ShowId == id) ??
+                       _context.Shows.SingleOrDefault(g => g.ShowId == id);
 
             if (show == null)
             {
@@ -69,10 +65,8 @@ namespace A1Dal
 
         public Station AddStation(int id, string name, string imageUri)
         {
-            var s = _context.Stations.Local.SingleOrDefault(g => g.StationId == id);
-
-            if (s == null)
-                s = _context.Stations.SingleOrDefault(g => g.StationId == id);
+            var s = _context.Stations.Local.SingleOrDefault(g => g.StationId == id) ??
+                    _context.Stations.SingleOrDefault(g => g.StationId == id);
 
             if (s == null)
             {

@@ -20,18 +20,10 @@ namespace A1Json2Xmltv
 
         private void LoadChannelsToLoad()
         {
-            var sr = new StreamReader(Settings.LoadInfo);
-
-            while (sr.Peek() != -1)
+            foreach (var sd in Settings.GetInstance().SenderDefinitions)
             {
-                var line = sr.ReadLine();
-                if (line == null) continue;
-
-                var id = line.Substring(0, line.IndexOf(':'));
-                var name = line.Substring(line.IndexOf(':') + 2);
-                Senders.Add(int.Parse(id), name);
+                Senders.Add(sd.Id, sd.Name);
             }
-            sr.Close();
         }
 
         private void GetChannelDataForId(int id)
@@ -41,7 +33,7 @@ namespace A1Json2Xmltv
             var query =
                 string.Format(
                     "http://epggw.a1.net/a/api.mobile.event.hour?type=JSON.1&stationuid={0}&period={1}T0000/{2}",
-                    id, dateString, Settings.HoursToLoad + "H");
+                    id, dateString, Settings.GetInstance().HoursToLoad + "H");
 
             var json = new WebClient().DownloadString(new Uri(query));
 
