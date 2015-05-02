@@ -45,10 +45,16 @@ namespace A1Json2Xmltv
             var current = 0;
             var all = result[2].Count();
 
-            var feResult = Parallel.ForEach(result[2], programInfo =>
+            //var feResult = Parallel.ForEach(result[2], programInfo =>
+            //{
+            foreach (var programInfo in result[2])
             {
+
+
+
                 var pos = Interlocked.Increment(ref current);
-                Console.WriteLine("\t({4}/{5}){0}: Loading Details for {1} {2}/{3}", td.Name, programInfo[3].Value<string>(), pos, all, _currentSender, Senders.Count);
+                Console.WriteLine("\t({4}/{5}){0}: Loading Details for {1} {2}/{3}", td.Name,
+                    programInfo[3].Value<string>(), pos, all, _currentSender, Senders.Count);
 
 
                 var moreData = GetDescription(programInfo[0].Value<int>());
@@ -72,12 +78,12 @@ namespace A1Json2Xmltv
                     pi.Genres.Add(genre);
 
                 td.Programs.Add(pi);
-            });
+                //});
 
-            
+            }
 
-            while (!feResult.IsCompleted)
-                Thread.Sleep(1);
+            //while (!feResult.IsCompleted)
+            //    Thread.Sleep(1);
             Datas.Add(td);
         }
 
@@ -102,14 +108,19 @@ namespace A1Json2Xmltv
         {
             try
             {
-                var query = string.Format("http://epggw.a1.net/a/api.mobile.event.get?type=JSON.1&evid={0}", id);
-                var json = new WebClient().DownloadString(query);
+                var query = string.Format("http://epggw.a1.net/a/api.mobile.event.get?type=JSON.3&evid={0}", id);
+
+                var wc = new WebClient();
+                wc.Headers.Add("user-agent", "Mozilla/5.0 (Linux; U; Android 4.4.4; de-at; D5503 Build/14.4.A.0.157) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1 A1TV/3.2");
+                //wc.Headers.Add("Accept-Encoding", "gzip");
+                wc.Headers.Add("Accept", "application/json");
+                var json = wc.DownloadString(query);
 
                 var data = JsonConvert.DeserializeObject<Rootobject<ProgramDetail>>(json);
 
                 return data.data[0].Event;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Console.WriteLine("COULDN'T LOAD INFORMATION FOR " + id);
             }
