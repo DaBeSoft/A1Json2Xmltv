@@ -1,30 +1,75 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
+using A1Json2Xmltv.Models;
+using System.Collections.Generic;
 
 namespace A1Json2Xmltv
 {
     public class Settings
     {
-        private int _hoursToLoad = 480;
-        private string _outputPath = SettingsPath + "/tvguide.xml";
+        private int _requestsPerMinute = 10;
 
-        [JsonProperty(PropertyName = "hoursToLoad")]
-        public int HoursToLoad
+        [JsonProperty(PropertyName = "requestsPerMinute")]
+        public int RequestsPerMinute
         {
-            get { return _hoursToLoad; }
-            set { _hoursToLoad = value; }
+            get { return _requestsPerMinute; }
+            set { _requestsPerMinute = value; }
         }
 
-        [JsonProperty(PropertyName = "OutputPath")]
+        private int _daysToLoad = 10;
+
+        [JsonProperty(PropertyName = "daysToLoad")]
+        public int DaysToLoad
+        {
+            get { return _daysToLoad; }
+            set { _daysToLoad = value; }
+        }
+
+        private int _stationListUpdateIntervalDays = 5;
+
+        [JsonProperty(PropertyName = "stationListUpdateIntervalDays")]
+        public int StationListUpdateIntervalDays
+        {
+            get { return _stationListUpdateIntervalDays; }
+            set { _stationListUpdateIntervalDays = value; }
+        }
+
+        private string _outputPath = SettingsPath + "/tvguide.xml";
+
+        [JsonProperty(PropertyName = "outputPath")]
         public string OutputPath
         {
             get { return _outputPath; }
             set { _outputPath = value; }
         }
 
+        private string _tmpOutputPath = SettingsPath + "/tvguidetmp.json";
+
+        [JsonProperty(PropertyName = "tmpOutputPath")]
+        public string TmpOutputPath
+        {
+            get { return _tmpOutputPath; }
+            set { _tmpOutputPath = value; }
+        }
+
+        private string _stationListPath = SettingsPath + "/StationList.json";
+
+        [JsonProperty(PropertyName = "stationListPath")]
+        public string StationListPath
+        {
+            get { return _stationListPath; }
+            set { _stationListPath = value; }
+        }
+
+
+        List<string> _senderDefinitions = new List<string>();
+
         [JsonProperty(PropertyName = "senderDefinitions")]
-        public SenderSetting[] SenderDefinitions { get; set; }
+        public List<string> SenderDefinitions {
+            get { return _senderDefinitions; }
+            set { _senderDefinitions = value; }
+        }
 
         private static string SettingsPath { get { return Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location); } }
         private static string SettingsFilePath { get { return SettingsPath + "/Settings.json"; } }
@@ -42,8 +87,11 @@ namespace A1Json2Xmltv
         {
             if (_settings == null && SettingsExist)
                 _settings = LoadSettings();
-            if(_settings == null && !SettingsExist)
+            if (_settings == null && !SettingsExist)
+            {
                 _settings = new Settings();
+                SaveSettings();
+            }
             return _settings;
         }
 
@@ -62,16 +110,6 @@ namespace A1Json2Xmltv
             using (var sw = new StreamWriter(SettingsFilePath, false))
             {
                 sw.Write(JsonConvert.SerializeObject(set, Formatting.Indented));
-            }
-        }
-
-
-        public static void CreateDefaultSettings()
-        {
-            if (!SettingsExist)
-            {
-                SaveSettings();
-                Console.WriteLine("Default Settings created");
             }
         }
     }

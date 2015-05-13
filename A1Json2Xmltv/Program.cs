@@ -2,98 +2,197 @@
 using System.Linq;
 using Dabesoft.Xmltv;
 using Dabesoft.Xmltv.Models;
+using DabeSoft.A1;
+using System.Collections.Generic;
+using System.IO;
+using DabeSoft.A1.Models;
+using Newtonsoft.Json;
+using A1Json2Xmltv.Models;
+using System.Threading;
 
 namespace A1Json2Xmltv
 {
     class Program
     {
+
+        // /R -> Reload avalaible Stations
         private static void Main(string[] args)
         {
-            Settings.CreateDefaultSettings();
-            Console.WriteLine("DabeSoft's A1 TV Xmltv Creator");
+
+            Facade facade = new Facade();
+            Settings settings = Settings.GetInstance();
 
 
-
-            if ((args.Length == 0 && !Settings.SettingsExist) || (args.Length > 0 && args[0] == "/?"))
+            List<Station> availableStations;
+            if (args.Contains("/R") || !File.Exists(settings.StationListPath) || DateTime.Now - new FileInfo(settings.StationListPath).LastWriteTime > new TimeSpan(settings.StationListUpdateIntervalDays, 0, 0, 0))
             {
-                PrintHelp();
+                availableStations = facade.GetStations();
+                File.WriteAllText(settings.StationListPath, JsonConvert.SerializeObject(availableStations, Formatting.Indented));
+            }
+            else
+            {
+                availableStations = JsonConvert.DeserializeObject<List<Station>>(File.ReadAllText(settings.StationListPath));
+            }
+
+            List<int> idList = availableStations.Where(a => settings.SenderDefinitions.Contains(a.DisplayName)).Select(a => a.UID).ToList();
+
+            if(idList.Count == 0)
+            {
+                Console.WriteLine("KEINE SENDER DEFINIERT");
+                Console.ReadLine();
                 return;
             }
 
-            if ((args.Length > 0 && args[0] == "/A"))
+
+            TmpOutput tmpOutPut;
+            if (File.Exists(settings.TmpOutputPath))
+                tmpOutPut = JsonConvert.DeserializeObject<TmpOutput>(File.ReadAllText(settings.TmpOutputPath));
+            else
+                tmpOutPut = new TmpOutput { Programs = new List<ProgramInfo>(), Stations = new List<Station>() };
+
+            tmpOutPut.Stations = availableStations.Where(a => idList.Contains(a.UID)).ToList();
+
+            DateTime mostRecent = DateTime.MinValue;
+            tmpOutPut.Programs.ForEach(p => mostRecent = mostRecent < p.End ? p.End : mostRecent);
+
+
+            for (int i = 0; i < settings.DaysToLoad; i++)
             {
-                var i = GetTvPrograms.GetSender();
-                Console.WriteLine(i + " Sender gefunden");
-                return;
+                DateTime current = DateTime.Now.Date.AddDays(i);
+
+                if (mostRecent.Date > current)
+                    continue;
+
+                var programdatas = facade.GetChannelDatas(idList, current);
+
+                foreach (var pd in programdatas)
+                {
+                    if (tmpOutPut.Programs.FirstOrDefault(w => w.EventId == pd.EventId) == null)
+                        tmpOutPut.Programs.Add(pd);
+                }
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
             }
 
-            Console.WriteLine("Starting");
+            int count = tmpOutPut.Programs.Count(w => string.IsNullOrWhiteSpace(w.Description));
+            int x = 1;
 
-            //var d = new Dal();
+
+            foreach (var item in tmpOutPut.Programs.Where(w => string.IsNullOrWhiteSpace(w.Description)))
+            {
+                Console.WriteLine("(" + x + "/" + count + ") Getting ProgramInfo for " + item.Name);
+                var details = facade.GetDescription(item.EventId);
+
+                item.Description = details.Description ?? "";
+                item.Category = details.Genre ?? "";
+                Thread.Sleep(60000 / settings.RequestsPerMinute);
+
+                if (x % 10 == 0)
+                {
+                    File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                }
+                x++;
+            }
+
+            File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+
+
+            Console.WriteLine("DONE Checking");
             var c = new XmltvGenerator();
 
-            if (args.Contains("/I"))
+            foreach(var p in tmpOutPut.Stations)
             {
-                Console.WriteLine("Getting ProgramData from A1...");
-                var b = new GetProgramInfos();
-                b.GetChannelData();
-
-                foreach (var data in b.Datas)
-                {
-                    c.AddChannel(data.Name);
-                    //var st = d.AddStation(data.Id, data.Name, "");
-                    foreach (var show in data.Programs)
-                    {
-                        c.AddProgramInfos(new ShowInfo
-                        {
-                            Category = show.Category,
-                            Year = show.Year,
-                            Name = show.Name,
-                            Description = show.Description,
-                            ShortInfo = show.ShortInfo,
-                            End = show.End,
-                            Start = show.Start,
-                            StationName = data.Name
-                        });
-                        //d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
-                    }
-                }
-                c.Write(Settings.GetInstance().OutputPath);
-                //d.Save();
+                c.AddChannel(p.DisplayName);
             }
 
+            foreach(var show in tmpOutPut.Programs)
+            {
+                c.AddProgramInfos(new ShowInfo
+                {
+                    Category = show.Category,
+                    Year = show.Year,
+                    Name = show.Name,
+                    Description = show.Description,
+                    ShortInfo = show.ShortInfo,
+                    End = show.End.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString(), //to linux time string
+                    Start = show.Start.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString(), //DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                    StationName = show.StationName
+                });
+            }
+            c.Write(settings.OutputPath);
+            Console.WriteLine("DONE");
 
-            //c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
+            Console.ReadKey();
+            return;
+            //TODO Add Icon to XMLTV
+            //TODO VERIFY THAT IT WORKS
+            //TODO MORE LOGGING
+            //TODO COnfigure Logging
+            //TODO MAIL ME IF NOT WORKING
 
-            //foreach (var station in d.GetStations())
+            //var c = new XmltvGenerator();
+
+            //if (args.Contains("/I"))
             //{
-            //    //c.AddChannel(station.Name);
-            //    foreach (var show in station.Shows)
+            //    Console.WriteLine("Getting ProgramData from A1...");
+            //    var b = new GetProgramInfos();
+            //    b.GetChannelData();
+
+            //    foreach (var data in b.Datas)
             //    {
-            //        try
+            //        c.AddChannel(data.Name);
+            //        //var st = d.AddStation(data.Id, data.Name, "");
+            //        foreach (var show in data.Programs)
             //        {
             //            c.AddProgramInfos(new ShowInfo
             //            {
-            //                Category = show.Genre.DvbName,
+            //                Category = show.Category,
             //                Year = show.Year,
             //                Name = show.Name,
             //                Description = show.Description,
-            //                ShortInfo = show.SubName,
+            //                ShortInfo = show.ShortInfo,
             //                End = show.End,
             //                Start = show.Start,
-            //                StationName = station.Name
+            //                StationName = data.Name
             //            });
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            Console.WriteLine(e.Message);
-            //            Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
+            //            //d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
             //        }
             //    }
+            //    c.Write(Settings.GetInstance().OutputPath);
+            //    //d.Save();
             //}
 
-            //Console.WriteLine("Writing Data");
-            //c.Write(Settings.GetInstance().OutputPath);
+
+            ////c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
+
+            ////foreach (var station in d.GetStations())
+            ////{
+            ////    //c.AddChannel(station.Name);
+            ////    foreach (var show in station.Shows)
+            ////    {
+            ////        try
+            ////        {
+            ////            c.AddProgramInfos(new ShowInfo
+            ////            {
+            ////                Category = show.Genre.DvbName,
+            ////                Year = show.Year,
+            ////                Name = show.Name,
+            ////                Description = show.Description,
+            ////                ShortInfo = show.SubName,
+            ////                End = show.End,
+            ////                Start = show.Start,
+            ////                StationName = station.Name
+            ////            });
+            ////        }
+            ////        catch (Exception e)
+            ////        {
+            ////            Console.WriteLine(e.Message);
+            ////            Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
+            ////        }
+            ////    }
+            ////}
+
+            ////Console.WriteLine("Writing Data");
+            ////c.Write(Settings.GetInstance().OutputPath);
         }
 
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using Dabesoft.Xmltv.Models;
+using System;
 
 namespace Dabesoft.Xmltv
 {
@@ -77,15 +78,28 @@ namespace Dabesoft.Xmltv
 
         private static string DateFormatter(string date)
         {
-            var ret = "";
-            ret += date.Substring(0, date.IndexOf('T'));
-            ret += date.Substring(date.IndexOf('T') + 1);
-            ret += "00";
-            ret += " +0200"; //TODO DAYLIGHT SAVINGSTIME
+
+            double d = Convert.ToDouble(date);
+            //var ret = "";
+            //ret += date.Substring(0, date.IndexOf('T'));
+            //ret += date.Substring(date.IndexOf('T') + 1);
+            //ret += "00";
+            //ret += " +0200"; //TODO DAYLIGHT SAVINGSTIME
+
+            // Unix timestamp is seconds past epoch
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(d).ToLocalTime();
+
+
+            //YYYYMMDDhhmmss +0100 for gmt+1
+
+
+            return dtDateTime.ToString("yyyyMMddHHmmss +0000");
+
 
             //TimeZoneInfo a = new TimeZoneInfo();
 
-            return ret;
+            //return ret;
         }
 
         public void Write(string path)

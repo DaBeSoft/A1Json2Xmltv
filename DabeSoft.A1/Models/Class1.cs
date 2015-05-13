@@ -1,9 +1,14 @@
-﻿namespace A1Json2Xmltv.Models
+﻿using Newtonsoft.Json;
+
+namespace DabeSoft.A1.Models
 {
     public class Rootobject<T>
     {
-        public Head head { get; set; }
-        public T[] data { get; set; }
+        [JsonProperty(PropertyName = "head")]
+        public Head Head { get; set; }
+
+        [JsonProperty(PropertyName = "data")]
+        public T[] Data { get; set; }
     }
 
     public class Head

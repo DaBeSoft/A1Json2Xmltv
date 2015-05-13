@@ -1,22 +1,17 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 
-namespace A1Json2Xmltv
+namespace DabeSoft.A1.Models
 {
-    class TvData
-    {
-        public int Id;
-        public string Name;
-        public readonly ConcurrentBag<ProgramInfo> Programs = new ConcurrentBag<ProgramInfo>();
-    }
-
-    class ProgramInfo
+    public class ProgramInfo
     {
         public int EventId;
-        public string Start;
-        public string End;
+        public int StationId;
+        public DateTime Start;
+        public DateTime End;
         public string Name;
         public string ShortInfo;
+        public string StationName;
         public string Description;
         public readonly List<string> Genres = new List<string>();
         public string LustigerBuchstabe;
