@@ -8,6 +8,15 @@ namespace A1Json2Xmltv
 {
     public class Settings
     {
+        private bool _getDescriptions = false;
+
+        [JsonProperty(PropertyName = "getDescriptions")]
+        public bool GetDescriptions
+        {
+            get { return _getDescriptions; }
+            set { _getDescriptions = value; }
+        }
+
         private int _requestsPerMinute = 10;
 
         [JsonProperty(PropertyName = "requestsPerMinute")]

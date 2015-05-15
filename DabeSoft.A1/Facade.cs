@@ -25,7 +25,7 @@ namespace DabeSoft.A1
                 if (result.Head.Status != 200)
                     throw new Exception("GOT STATUS " + result.Head.Status + " - " + result.Head.Message);
 
-                sender.AddRange(result.Data.Select(a=> a.Station).ToList());
+                sender.AddRange(result.Data.Select(a => a.Station).ToList());
             }
             catch (Exception e)
             {
@@ -55,18 +55,13 @@ namespace DabeSoft.A1
                 throw new Exception("ERROR - " + head[0].Value<int>());
 
             result = result[1].Value<JArray>();
-            //var /*results*/ = result[0].Value<JArray>();
 
             List<ProgramInfo> ChannelDatas = new List<ProgramInfo>();
 
             foreach (var r in result)
             {
-                //var td = new TvData { Id = r[0].Value<int>(), Name = r[1].Value<string>() };
-
                 foreach (var programInfo in r[2])
                 {
-                    //var moreData = GetDescription(programInfo[0].Value<int>()); //todo später nachholen, eins nach dem anderen
-
                     DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                     start = start.AddSeconds(programInfo[1].Value<int>()).ToLocalTime();
 
@@ -99,24 +94,17 @@ namespace DabeSoft.A1
 
         public Event GetDescription(int id)
         {
-            try
-            {
-                var query = string.Format(A1Settings.GetInstance().DescriptionUri, id);
+            var query = string.Format(A1Settings.GetInstance().DescriptionUri, id);
 
-                var wc = new AndroidWebClient();
-                var json = wc.DownloadString(query);
+            var wc = new AndroidWebClient();
+            var json = wc.DownloadString(query);
 
-                var data = JsonConvert.DeserializeObject<Rootobject<ProgramDetail>>(json);
+            var data = JsonConvert.DeserializeObject<Rootobject<ProgramDetail>>(json);
 
-                return data.Data[0].Event;
-            }
-            catch (Exception e)
-            {
-                _log.Error("Error getting Description - " + id, e);
-            }
+            if (data.Head.Status != 200)
+                throw new Exception("GOT STATUS " + data.Head.Status);
 
-            return null;
+            return data.Data[0].Event;
         }
-
     }
 }

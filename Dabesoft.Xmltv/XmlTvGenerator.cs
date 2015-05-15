@@ -94,7 +94,7 @@ namespace Dabesoft.Xmltv
             //YYYYMMDDhhmmss +0100 for gmt+1
 
 
-            return dtDateTime.ToString("yyyyMMddHHmmss +0000");
+            return dtDateTime.ToString("yyyyMMddHHmmss +0200");
 
 
             //TimeZoneInfo a = new TimeZoneInfo();

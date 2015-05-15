@@ -9,19 +9,58 @@ using DabeSoft.A1.Models;
 using Newtonsoft.Json;
 using A1Json2Xmltv.Models;
 using System.Threading;
+using log4net.Repository.Hierarchy;
+using log4net;
+using log4net.Appender;
+using log4net.Layout;
 
 namespace A1Json2Xmltv
 {
     class Program
     {
 
+
+
+
+
+
+
         // /R -> Reload avalaible Stations
         private static void Main(string[] args)
         {
+            //DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            //start = start.AddSeconds(1431702600);
+
+
+            //Console.WriteLine(start);
+            //Console.WriteLine(start.ToLocalTime());
+
+            //Console.ReadLine();
+
+
+            Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
+            hierarchy.Root.RemoveAllAppenders(); /*Remove any other appenders*/
+
+            FileAppender fileAppender = new FileAppender();
+            fileAppender.AppendToFile = true;
+            fileAppender.LockingModel = new FileAppender.MinimalLock();
+            fileAppender.File = "log.txt";
+            fileAppender.AppendToFile = false;
+            PatternLayout pl = new PatternLayout();
+            pl.ConversionPattern = "%d [%2%t] %-5p [%-10c]   %m%n%n";
+            pl.ActivateOptions();
+            fileAppender.Layout = pl;
+            fileAppender.ActivateOptions();
+
+            log4net.Config.BasicConfigurator.Configure(fileAppender);
+
+            ILog _log = LogManager.GetLogger(typeof(Program));
+
 
             Facade facade = new Facade();
             Settings settings = Settings.GetInstance();
 
+            _log.Info("Starting - getting available Stations");
 
             List<Station> availableStations;
             if (args.Contains("/R") || !File.Exists(settings.StationListPath) || DateTime.Now - new FileInfo(settings.StationListPath).LastWriteTime > new TimeSpan(settings.StationListUpdateIntervalDays, 0, 0, 0))
@@ -33,13 +72,15 @@ namespace A1Json2Xmltv
             {
                 availableStations = JsonConvert.DeserializeObject<List<Station>>(File.ReadAllText(settings.StationListPath));
             }
+            _log.Info("got available Stations");
+
 
             List<int> idList = availableStations.Where(a => settings.SenderDefinitions.Contains(a.DisplayName)).Select(a => a.UID).ToList();
 
-            if(idList.Count == 0)
+            if (idList.Count == 0)
             {
                 Console.WriteLine("KEINE SENDER DEFINIERT");
-                Console.ReadLine();
+                _log.Warn("KEINE SENDER DEFINIERT");
                 return;
             }
 
@@ -62,6 +103,7 @@ namespace A1Json2Xmltv
 
                 if (mostRecent.Date > current)
                     continue;
+                _log.Info("Getting ProgramInfos for " + current.ToShortDateString());
 
                 var programdatas = facade.GetChannelDatas(idList, current);
 
@@ -76,35 +118,63 @@ namespace A1Json2Xmltv
             int count = tmpOutPut.Programs.Count(w => string.IsNullOrWhiteSpace(w.Description));
             int x = 1;
 
+            WriteXml(tmpOutPut, settings, _log);
 
-            foreach (var item in tmpOutPut.Programs.Where(w => string.IsNullOrWhiteSpace(w.Description)))
+            if (settings.GetDescriptions)
             {
-                Console.WriteLine("(" + x + "/" + count + ") Getting ProgramInfo for " + item.Name);
-                var details = facade.GetDescription(item.EventId);
-
-                item.Description = details.Description ?? "";
-                item.Category = details.Genre ?? "";
-                Thread.Sleep(60000 / settings.RequestsPerMinute);
-
-                if (x % 10 == 0)
+                _log.Info("Getting Descriptions with " + settings.RequestsPerMinute + " requests per minute");
+                foreach (var item in tmpOutPut.Programs.Where(w => string.IsNullOrWhiteSpace(w.Description)))
                 {
-                    File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                    try
+                    {
+                        Console.WriteLine("(" + x + "/" + count + ") Getting ProgramInfo for " + item.Name);
+                        _log.Info("(" + x + "/" + count + ") Getting ProgramInfo for " + item.Name);
+                        var details = facade.GetDescription(item.EventId);
+
+                        item.Description = details.Description ?? "";
+                        item.Category = details.Genre ?? "";
+                        Thread.Sleep(60000 / settings.RequestsPerMinute);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e);
+                        Thread.Sleep(60000);
+                    }
+                    if (x % 10 == 0)
+                    {
+                        File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                    }
+                    x++;
                 }
-                x++;
+
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+
+                _log.Info("Got all data");
+                Console.WriteLine("DONE Checking");
+
+                WriteXml(tmpOutPut, settings, _log);
             }
+            return;
+            //TODO Add Icon to XMLTV
+            //TODO VERIFY THAT IT WORKS
+            //TODO MORE LOGGING
+            //TODO COnfigure Logging
+            //TODO MAIL ME IF NOT WORKING
+        }
 
-            File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
 
-
-            Console.WriteLine("DONE Checking");
+        private static void WriteXml(TmpOutput tmpOutPut, Settings settings, ILog _log)
+        {
             var c = new XmltvGenerator();
 
-            foreach(var p in tmpOutPut.Stations)
+            _log.Info("Writing XML File");
+
+            foreach (var p in tmpOutPut.Stations)
             {
                 c.AddChannel(p.DisplayName);
             }
 
-            foreach(var show in tmpOutPut.Programs)
+            foreach (var show in tmpOutPut.Programs)
             {
                 c.AddProgramInfos(new ShowInfo
                 {
@@ -120,79 +190,6 @@ namespace A1Json2Xmltv
             }
             c.Write(settings.OutputPath);
             Console.WriteLine("DONE");
-
-            Console.ReadKey();
-            return;
-            //TODO Add Icon to XMLTV
-            //TODO VERIFY THAT IT WORKS
-            //TODO MORE LOGGING
-            //TODO COnfigure Logging
-            //TODO MAIL ME IF NOT WORKING
-
-            //var c = new XmltvGenerator();
-
-            //if (args.Contains("/I"))
-            //{
-            //    Console.WriteLine("Getting ProgramData from A1...");
-            //    var b = new GetProgramInfos();
-            //    b.GetChannelData();
-
-            //    foreach (var data in b.Datas)
-            //    {
-            //        c.AddChannel(data.Name);
-            //        //var st = d.AddStation(data.Id, data.Name, "");
-            //        foreach (var show in data.Programs)
-            //        {
-            //            c.AddProgramInfos(new ShowInfo
-            //            {
-            //                Category = show.Category,
-            //                Year = show.Year,
-            //                Name = show.Name,
-            //                Description = show.Description,
-            //                ShortInfo = show.ShortInfo,
-            //                End = show.End,
-            //                Start = show.Start,
-            //                StationName = data.Name
-            //            });
-            //            //d.AddShow(st, s.EventId, s.Start, s.End, s.Name, s.Category, s.Year, "", "", s.Description, data.Id, s.ShortInfo);
-            //        }
-            //    }
-            //    c.Write(Settings.GetInstance().OutputPath);
-            //    //d.Save();
-            //}
-
-
-            ////c.AddChannels(d.GetStations().Select(t => t.Name).ToList());
-
-            ////foreach (var station in d.GetStations())
-            ////{
-            ////    //c.AddChannel(station.Name);
-            ////    foreach (var show in station.Shows)
-            ////    {
-            ////        try
-            ////        {
-            ////            c.AddProgramInfos(new ShowInfo
-            ////            {
-            ////                Category = show.Genre.DvbName,
-            ////                Year = show.Year,
-            ////                Name = show.Name,
-            ////                Description = show.Description,
-            ////                ShortInfo = show.SubName,
-            ////                End = show.End,
-            ////                Start = show.Start,
-            ////                StationName = station.Name
-            ////            });
-            ////        }
-            ////        catch (Exception e)
-            ////        {
-            ////            Console.WriteLine(e.Message);
-            ////            Console.WriteLine("Error @" + station.Name + " _ " + show.Name);
-            ////        }
-            ////    }
-            ////}
-
-            ////Console.WriteLine("Writing Data");
-            ////c.Write(Settings.GetInstance().OutputPath);
         }
 
 
@@ -211,7 +208,6 @@ namespace A1Json2Xmltv
             Console.WriteLine();
             Console.WriteLine("Beliebige Taste zum beenden drücken");
 
-            Console.ReadLine();
         }
 
     }
