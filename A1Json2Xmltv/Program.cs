@@ -156,10 +156,10 @@ namespace A1Json2Xmltv
             }
             return;
             //TODO Add Icon to XMLTV
-            //TODO VERIFY THAT IT WORKS
             //TODO MORE LOGGING
             //TODO COnfigure Logging
             //TODO MAIL ME IF NOT WORKING
+            //TODO tmpoutput berreinigen
         }
 
 
