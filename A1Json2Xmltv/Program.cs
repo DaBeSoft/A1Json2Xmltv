@@ -18,26 +18,9 @@ namespace A1Json2Xmltv
 {
     class Program
     {
-
-
-
-
-
-
-
         // /R -> Reload avalaible Stations
         private static void Main(string[] args)
         {
-            //DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            //start = start.AddSeconds(1431702600);
-
-
-            //Console.WriteLine(start);
-            //Console.WriteLine(start.ToLocalTime());
-
-            //Console.ReadLine();
-
-
             Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
             hierarchy.Root.RemoveAllAppenders(); /*Remove any other appenders*/
 
@@ -87,7 +70,13 @@ namespace A1Json2Xmltv
 
             TmpOutput tmpOutPut;
             if (File.Exists(settings.TmpOutputPath))
+            {
                 tmpOutPut = JsonConvert.DeserializeObject<TmpOutput>(File.ReadAllText(settings.TmpOutputPath));
+                List<ProgramInfo> toRemove = new List<ProgramInfo>();
+                tmpOutPut.Programs.ForEach(p => { if (p.End.Date < DateTime.Now.Date) toRemove.Add(p);  });
+                toRemove.ForEach(p => tmpOutPut.Programs.Remove(p));
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+            }
             else
                 tmpOutPut = new TmpOutput { Programs = new List<ProgramInfo>(), Stations = new List<Station>() };
 
