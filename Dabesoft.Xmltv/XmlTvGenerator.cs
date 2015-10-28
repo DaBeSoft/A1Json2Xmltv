@@ -78,28 +78,18 @@ namespace Dabesoft.Xmltv
 
         private static string DateFormatter(string date)
         {
-
             double d = Convert.ToDouble(date);
-            //var ret = "";
-            //ret += date.Substring(0, date.IndexOf('T'));
-            //ret += date.Substring(date.IndexOf('T') + 1);
-            //ret += "00";
-            //ret += " +0200"; //TODO DAYLIGHT SAVINGSTIME
-
+            
             // Unix timestamp is seconds past epoch
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(d).ToLocalTime();
 
+            var offsetHour = DateTime.Now.Hour - DateTime.UtcNow.Hour;
+            var offsetMinute = DateTime.Now.Minute - DateTime.UtcNow.Minute;
 
-            //YYYYMMDDhhmmss +0100 for gmt+1
+            string offsetstring = string.Format(" +{0:00}{1:00}", offsetHour, offsetMinute);
 
-
-            return dtDateTime.ToString("yyyyMMddHHmmss +0200");
-
-
-            //TimeZoneInfo a = new TimeZoneInfo();
-
-            //return ret;
+            return dtDateTime.ToString("yyyyMMddHHmmss" + offsetstring);
         }
 
         public void Write(string path)

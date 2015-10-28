@@ -62,6 +62,11 @@ namespace DabeSoft.A1
             {
                 foreach (var programInfo in r[2])
                 {
+                    if (!programInfo.HasValues)
+                    {
+                        _log.Warn("NO VALUE OBJECT - ignoring entry");
+                        continue;
+                    }
                     DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                     start = start.AddSeconds(programInfo[1].Value<int>()).ToLocalTime();
 
