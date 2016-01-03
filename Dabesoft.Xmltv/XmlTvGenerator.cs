@@ -32,10 +32,11 @@ namespace Dabesoft.Xmltv
             _resultBuilder.AppendLine($"<channel id='{n}'>");
             _resultBuilder.AppendLine($"<display-name lang='de'>{name}</display-name>");
             //<icon src="file://C:\Perl\site/share/xmltv/icons/KTVT.gif" />
-
+            //todo make switch in settings for fileformat
             //http://epggw.a1.net/img/station/darkbg/21.svg
+            //http://epggw.a1.net/img/station/480x240/1.png
             if (uid != 0)
-                _resultBuilder.AppendLine("<icon src='http://epggw.a1.net/img/station/darkbg/" + uid + ".svg' />");
+                _resultBuilder.AppendLine("<icon src='http://epggw.a1.net/img/station/darkbg/480x240/" + uid + ".png' />");
             _resultBuilder.AppendLine("</channel>");
         }
 
