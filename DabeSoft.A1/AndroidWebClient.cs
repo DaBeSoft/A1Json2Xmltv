@@ -2,7 +2,7 @@
 
 namespace DabeSoft.A1
 {
-    class AndroidWebClient : WebClient
+    public class AndroidWebClient : WebClient
     {
         public AndroidWebClient()
         {

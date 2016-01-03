@@ -16,21 +16,26 @@ namespace Dabesoft.Xmltv
             _resultBuilder.AppendLine("<tv generator-info-name='DaBe`s Epic A1 EPG Grabber'>");
         }
 
-        public void AddChannels(IEnumerable<string> names)
-        {
-            foreach (var name in names)
-            {
-                AddChannel(name);
-            }
-        }
+        //public void AddChannels(IEnumerable<string> names)
+        //{
+        //    foreach (var name in names)
+        //    {
+        //        AddChannel(name);
+        //    }
+        //}
 
-        public void AddChannel(string name)
+        public void AddChannel(string name, int uid)
         {
             var n = name.Replace(" ", "").Replace("/", "I").Replace("_", "");
             n += ".1";
 
-            _resultBuilder.AppendLine(string.Format("<channel id='{0}'>", n));
-            _resultBuilder.AppendLine(string.Format("<display-name lang='de'>{0}</display-name>", name));
+            _resultBuilder.AppendLine($"<channel id='{n}'>");
+            _resultBuilder.AppendLine($"<display-name lang='de'>{name}</display-name>");
+            //<icon src="file://C:\Perl\site/share/xmltv/icons/KTVT.gif" />
+
+            //http://epggw.a1.net/img/station/darkbg/21.svg
+            if (uid != 0)
+                _resultBuilder.AppendLine("<icon src='http://epggw.a1.net/img/station/darkbg/" + uid + ".svg' />");
             _resultBuilder.AppendLine("</channel>");
         }
 
@@ -48,22 +53,21 @@ namespace Dabesoft.Xmltv
             channelName += ".1";
 
             _resultBuilder.AppendLine(
-                string.Format("<programme start='{0}' stop='{1}' channel='{2}'>", DateFormatter(si.Start),
-                    DateFormatter(si.End), channelName));
-            _resultBuilder.AppendLine(string.Format("<title lang='de'>{0}</title>", si.Name));
+                $"<programme start='{DateFormatter(si.Start)}' stop='{DateFormatter(si.End)}' channel='{channelName}'>");
+            _resultBuilder.AppendLine($"<title lang='de'>{si.Name}</title>");
 
 
 
             if (!string.IsNullOrWhiteSpace(si.ShortInfo))
-                _resultBuilder.AppendLine(string.Format("<sub-title lang='de'>{0}</sub-title>", si.ShortInfo));
+                _resultBuilder.AppendLine($"<sub-title lang='de'>{si.ShortInfo}</sub-title>");
 
             if (!string.IsNullOrWhiteSpace(si.Description))
-                _resultBuilder.AppendLine(string.Format("<desc lang='de'>{0}</desc>", GetUtf8String(si.Description)));
+                _resultBuilder.AppendLine($"<desc lang='de'>{GetUtf8String(si.Description)}</desc>");
 
             if (si.Year != -1)
-                _resultBuilder.AppendLine(string.Format("<date>{0}</date>", si.Year));
+                _resultBuilder.AppendLine($"<date>{si.Year}</date>");
             if (!string.IsNullOrEmpty(si.Category))
-                _resultBuilder.AppendLine(string.Format("<category lang='de'>{0}</category>", si.Category));
+                _resultBuilder.AppendLine($"<category lang='de'>{si.Category}</category>");
 
 
             _resultBuilder.AppendLine("</programme>");
@@ -79,7 +83,7 @@ namespace Dabesoft.Xmltv
         private static string DateFormatter(string date)
         {
             double d = Convert.ToDouble(date);
-            
+
             // Unix timestamp is seconds past epoch
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(d).ToLocalTime();
@@ -87,7 +91,10 @@ namespace Dabesoft.Xmltv
             var offsetHour = DateTime.Now.Hour - DateTime.UtcNow.Hour;
             var offsetMinute = DateTime.Now.Minute - DateTime.UtcNow.Minute;
 
-            string offsetstring = string.Format(" +{0:00}{1:00}", offsetHour, offsetMinute);
+            string offsetstring = $" +{offsetHour:00}{offsetMinute:00}";
+
+            //todo
+            //offsetstring = "";
 
             return dtDateTime.ToString("yyyyMMddHHmmss" + offsetstring);
         }
@@ -102,7 +109,6 @@ namespace Dabesoft.Xmltv
             {
                 sw.Write(result);
             }
-
         }
     }
 }

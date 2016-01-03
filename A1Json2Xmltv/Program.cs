@@ -152,15 +152,15 @@ namespace A1Json2Xmltv
         }
 
 
-        private static void WriteXml(TmpOutput tmpOutPut, Settings settings, ILog _log)
+        private static void WriteXml(TmpOutput tmpOutPut, Settings settings, ILog log)
         {
             var c = new XmltvGenerator();
 
-            _log.Info("Writing XML File");
+            log.Info("Writing XML File");
 
             foreach (var p in tmpOutPut.Stations)
             {
-                c.AddChannel(p.DisplayName);
+                c.AddChannel(p.DisplayName, p.UID);
             }
 
             foreach (var show in tmpOutPut.Programs)

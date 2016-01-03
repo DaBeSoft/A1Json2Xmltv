@@ -10,7 +10,7 @@ namespace DabeSoft.A1
 {
     public class Facade
     {
-        ILog _log = LogManager.GetLogger(typeof(Facade));
+        readonly ILog _log = LogManager.GetLogger(typeof(Facade));
 
         public List<Station> GetStations()
         {
