@@ -92,6 +92,9 @@ namespace Dabesoft.Xmltv
             var offsetHour = DateTime.Now.Hour - DateTime.UtcNow.Hour;
             var offsetMinute = DateTime.Now.Minute - DateTime.UtcNow.Minute;
 
+            if (offsetHour < 0) //when started via crontab, there is an offset of -24Hours, dont now why :S
+                offsetHour += 24; 
+
             string offsetstring = $" +{offsetHour:00}{offsetMinute:00}";
 
             //todo
