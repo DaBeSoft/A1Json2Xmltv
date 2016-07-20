@@ -19,7 +19,6 @@ namespace DabeSoft.A1
             try
             {
                 var wc = new AndroidWebClient();
-                wc.Encoding = Encoding.UTF8;
                 var json = wc.DownloadString(A1Settings.GetInstance().StationDataUri);
 
                 var result = JsonConvert.DeserializeObject<Rootobject<StationData>>(json);
