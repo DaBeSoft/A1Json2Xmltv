@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using A1Json2Xmltv.Models;
 using System.Collections.Generic;
+using System.Text;
 
 namespace A1Json2Xmltv
 {
@@ -106,7 +107,7 @@ namespace A1Json2Xmltv
 
         private static Settings LoadSettings()
         {
-            using (var sr = new StreamReader(SettingsFilePath))
+            using (var sr = new StreamReader(SettingsFilePath, Encoding.UTF8))
             {
                 var json = sr.ReadToEnd();
                 return JsonConvert.DeserializeObject<Settings>(json);
@@ -116,7 +117,7 @@ namespace A1Json2Xmltv
         public static void SaveSettings()
         {
             var set = GetInstance();
-            using (var sw = new StreamWriter(SettingsFilePath, false))
+            using (var sw = new StreamWriter(SettingsFilePath, false, Encoding.UTF8))
             {
                 sw.Write(JsonConvert.SerializeObject(set, Formatting.Indented));
             }

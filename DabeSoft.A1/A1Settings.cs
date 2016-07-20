@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace DabeSoft.A1
 {
@@ -67,7 +68,7 @@ namespace DabeSoft.A1
 
         private static A1Settings LoadSettings()
         {
-            using (var sr = new StreamReader(SettingsFilePath))
+            using (var sr = new StreamReader(SettingsFilePath, Encoding.UTF8))
             {
                 var json = sr.ReadToEnd();
                 return JsonConvert.DeserializeObject<A1Settings>(json);
@@ -77,7 +78,7 @@ namespace DabeSoft.A1
         public static void SaveSettings()
         {
             var set = GetInstance();
-            using (var sw = new StreamWriter(SettingsFilePath, false))
+            using (var sw = new StreamWriter(SettingsFilePath, false, Encoding.UTF8))
             {
                 sw.Write(JsonConvert.SerializeObject(set, Formatting.Indented));
             }

@@ -13,6 +13,7 @@ using log4net.Repository.Hierarchy;
 using log4net;
 using log4net.Appender;
 using log4net.Layout;
+using System.Text;
 
 namespace A1Json2Xmltv
 {
@@ -49,11 +50,11 @@ namespace A1Json2Xmltv
             if (args.Contains("/R") || !File.Exists(settings.StationListPath) || DateTime.Now - new FileInfo(settings.StationListPath).LastWriteTime > new TimeSpan(settings.StationListUpdateIntervalDays, 0, 0, 0))
             {
                 availableStations = facade.GetStations();
-                File.WriteAllText(settings.StationListPath, JsonConvert.SerializeObject(availableStations, Formatting.Indented));
+                File.WriteAllText(settings.StationListPath, JsonConvert.SerializeObject(availableStations, Formatting.Indented), Encoding.UTF8);
             }
             else
             {
-                availableStations = JsonConvert.DeserializeObject<List<Station>>(File.ReadAllText(settings.StationListPath));
+                availableStations = JsonConvert.DeserializeObject<List<Station>>(File.ReadAllText(settings.StationListPath, Encoding.UTF8));
             }
             _log.Info("got available Stations");
 
@@ -71,11 +72,11 @@ namespace A1Json2Xmltv
             TmpOutput tmpOutPut;
             if (File.Exists(settings.TmpOutputPath))
             {
-                tmpOutPut = JsonConvert.DeserializeObject<TmpOutput>(File.ReadAllText(settings.TmpOutputPath));
+                tmpOutPut = JsonConvert.DeserializeObject<TmpOutput>(File.ReadAllText(settings.TmpOutputPath, Encoding.UTF8));
                 List<ProgramInfo> toRemove = new List<ProgramInfo>();
                 tmpOutPut.Programs.ForEach(p => { if (p.End.Date < DateTime.Now.Date) toRemove.Add(p);  });
                 toRemove.ForEach(p => tmpOutPut.Programs.Remove(p));
-                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented), Encoding.UTF8);
             }
             else
                 tmpOutPut = new TmpOutput { Programs = new List<ProgramInfo>(), Stations = new List<Station>() };
@@ -101,7 +102,7 @@ namespace A1Json2Xmltv
                     if (tmpOutPut.Programs.FirstOrDefault(w => w.EventId == pd.EventId) == null)
                         tmpOutPut.Programs.Add(pd);
                 }
-                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented), Encoding.UTF8);
             }
 
             int count = tmpOutPut.Programs.Count(w => string.IsNullOrWhiteSpace(w.Description));
@@ -131,12 +132,12 @@ namespace A1Json2Xmltv
                     }
                     if (x % 10 == 0)
                     {
-                        File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                        File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented), Encoding.UTF8);
                     }
                     x++;
                 }
 
-                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented));
+                File.WriteAllText(settings.TmpOutputPath, JsonConvert.SerializeObject(tmpOutPut, Formatting.Indented), Encoding.UTF8);
 
                 _log.Info("Got all data");
                 Console.WriteLine("DONE Checking");

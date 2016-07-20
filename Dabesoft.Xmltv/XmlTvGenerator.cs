@@ -109,7 +109,7 @@ namespace Dabesoft.Xmltv
             var result = _resultBuilder.ToString();
             _resultBuilder.Clear();
 
-            using (var sw = new StreamWriter(path, false))
+            using (var sw = new StreamWriter(path, false, Encoding.UTF8))
             {
                 sw.Write(result);
             }
