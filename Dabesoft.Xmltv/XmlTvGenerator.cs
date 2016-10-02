@@ -29,6 +29,9 @@ namespace Dabesoft.Xmltv
             var n = name.Replace(" ", "").Replace("/", "I").Replace("_", "");
             n += ".1";
 
+            if (name.Contains("&"))
+                name = name.Replace("&", "&amp;");
+
             _resultBuilder.AppendLine($"<channel id='{n}'>");
             _resultBuilder.AppendLine($"<display-name lang='de'>{name}</display-name>");
             //<icon src="file://C:\Perl\site/share/xmltv/icons/KTVT.gif" />
@@ -42,14 +45,15 @@ namespace Dabesoft.Xmltv
 
         public void AddProgramInfos(ShowInfo si)
         {
+            if(string.IsNullOrWhiteSpace(si.Name))
+                return;
             //YYYYMMDDhhmmss +0100 for gmt+1
 
             if (si.Name.Contains("&"))
                 si.Name = si.Name.Replace("&", "&amp;");
             if (!string.IsNullOrWhiteSpace(si.ShortInfo) && si.ShortInfo.Contains("&"))
                 si.ShortInfo = si.ShortInfo.Replace("&", "&amp;");
-
-
+            
             var channelName = si.StationName.Replace(" ", "").Replace("/", "I").Replace("_", "");
             channelName += ".1";
 

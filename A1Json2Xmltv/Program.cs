@@ -58,6 +58,12 @@ namespace A1Json2Xmltv
             }
             _log.Info("got available Stations");
 
+            if (args.Contains("/addAll"))
+            {
+                settings.SenderDefinitions = availableStations.Select(s => s.DisplayName).ToList();
+                Settings.SaveSettings();
+                return;
+            }
 
             List<int> idList = availableStations.Where(a => settings.SenderDefinitions.Contains(a.DisplayName)).Select(a => a.UID).ToList();
 
